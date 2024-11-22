@@ -10,17 +10,16 @@ public class AgentImpl extends UnicastRemoteObject implements Agent {
     public AgentImpl() throws RemoteException {}
 
     @Override
-    public double[] multiplyFragment(double[][] matrixA, double[] vectorB) throws RemoteException {
-        System.out.println("[" + LocalDateTime.now() + "] Agent: Otrzymano fragment macierzy do obliczenia.");
-        int size = matrixA.length;
+    public double[] addFragment(double[] rowA, double[] rowB) throws RemoteException {
+        System.out.println("[" + LocalDateTime.now() + "] Agent: Otrzymano fragment macierzy do dodania.");
+
+        int size = rowA.length;
         double[] result = new double[size];
 
         for (int i = 0; i < size; i++) {
-            result[i] = 0;
-            for (int j = 0; j < size; j++) {
-                result[i] += matrixA[i][j] * vectorB[j];
-            }
+            result[i] = rowA[i] + rowB[i];
         }
+
         System.out.println("[" + LocalDateTime.now() + "] Agent: Wynik obliczony i zwracany do serwera.");
         return result;
     }

@@ -1,33 +1,25 @@
 package client;
 
-import shared.MatrixDeterminant;
+import shared.OddEvenSorter;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 public class Client {
     public static void main(String[] args) {
         try {
             Registry registry = LocateRegistry.getRegistry();
 
-            MatrixDeterminant server = (MatrixDeterminant) registry.lookup("MatrixDeterminant");
+            OddEvenSorter server = (OddEvenSorter) registry.lookup("OddEvenSorter");
 
-            double[][] matrix = {
-                    {3, 2, 3},
-                    {4, 5, 6},
-                    {7, 8, 9}
-            };
-            for (double[] row : matrix) {
-                for (double val : row) {
-                    System.out.printf("%.2f ", val);
-                }
-                System.out.println();
-            }
-            System.out.println("[" + LocalDateTime.now() + "] Klient: Wysyłanie macierzy do serwera...");
-            double determinant = server.calculateDeterminant(matrix);
+            int[] array = {5, 1, 4, 2, 3};
 
-            System.out.println("[" + LocalDateTime.now() + "] Klient: Wyznacznik odebrany od serwera: " + determinant);
+            System.out.println("[" + LocalDateTime.now() + "] Klient: Wysyłanie tablicy do serwera: " + Arrays.toString(array));
+            int[] sortedArray = server.sortArray(array);
+
+            System.out.println("[" + LocalDateTime.now() + "] Klient: Otrzymana posortowana tablica: " + Arrays.toString(sortedArray));
         } catch (Exception e) {
             System.err.println("Client exception: " + e.toString());
             e.printStackTrace();

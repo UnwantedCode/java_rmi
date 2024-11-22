@@ -10,26 +10,24 @@ public class AgentImpl extends UnicastRemoteObject implements Agent {
     public AgentImpl() throws RemoteException {}
 
     @Override
-    public double calculatePartialDeterminant(double[][] matrix, boolean isMainDiagonal) throws RemoteException {
-        System.out.println("[" + LocalDateTime.now() + "] Agent: Otrzymano macierz do obliczenia częściowego wyznacznika.");
+    public int[] sortPhase(int[] array, boolean isEvenPhase) throws RemoteException {
+        System.out.println("[" + LocalDateTime.now() + "] Agent: Rozpoczęcie fazy " + (isEvenPhase ? "even" : "odd"));
 
-        if (matrix.length != 3 || matrix[0].length != 3) {
-            throw new IllegalArgumentException("Macierz musi być rozmiaru 3x3.");
+        int startIndex = isEvenPhase ? 0 : 1;
+
+        for (int i = startIndex; i < array.length - 1; i += 2) {
+            if (array[i] > array[i + 1]) {
+                int temp = array[i];
+                array[i] = array[i + 1];
+                array[i + 1] = temp;
+            }
         }
 
-        double result = 0;
-
-        if (isMainDiagonal) {
-            result = (matrix[0][0] * matrix[1][1] * matrix[2][2]) +
-                    (matrix[0][1] * matrix[1][2] * matrix[2][0]) +
-                    (matrix[0][2] * matrix[1][0] * matrix[2][1]);
-        } else {
-            result = (matrix[0][2] * matrix[1][1] * matrix[2][0]) +
-                    (matrix[0][1] * matrix[1][0] * matrix[2][2]) +
-                    (matrix[0][0] * matrix[1][2] * matrix[2][1]);
+        System.out.println("[" + LocalDateTime.now() + "] Agent: Faza zakończona. Tablica: ");
+        for (int val : array) {
+            System.out.print(val + " ");
         }
-
-        System.out.println("[" + LocalDateTime.now() + "] Agent: Wynik częściowy obliczony: " + result);
-        return result;
+        System.out.println();
+        return array;
     }
 }

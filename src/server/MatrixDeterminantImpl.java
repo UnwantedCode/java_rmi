@@ -9,6 +9,9 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.time.LocalDateTime;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MatrixDeterminantImpl extends UnicastRemoteObject implements MatrixDeterminant {
     public MatrixDeterminantImpl() throws RemoteException {}
@@ -22,11 +25,15 @@ public class MatrixDeterminantImpl extends UnicastRemoteObject implements Matrix
             Agent agent0 = (Agent) registry.lookup("Agent0");
             Agent agent1 = (Agent) registry.lookup("Agent1");
 
-            System.out.println("[" + LocalDateTime.now() + "] Serwer: Zlecanie obliczeń Agentowi 0 (przekątne główne).");
-            double mainDiagonalSum = agent0.calculatePartialDeterminant(matrix, true);
+            ExecutorService executor = Executors.newFixedThreadPool(2);
 
-            System.out.println("[" + LocalDateTime.now() + "] Serwer: Zlecanie obliczeń Agentowi 1 (przekątne przeciwne).");
-            double antiDiagonalSum = agent1.calculatePartialDeterminant(matrix, false);
+            Future<Double> mainDiagonalFuture = executor.submit(() -> agent0.calculatePartialDeterminant(matrix, true));
+            Future<Double> antiDiagonalFuture = executor.submit(() -> agent1.calculatePartialDeterminant(matrix, false));
+
+            double mainDiagonalSum = mainDiagonalFuture.get();
+            double antiDiagonalSum = antiDiagonalFuture.get();
+
+            executor.shutdown();
 
             double determinant = mainDiagonalSum - antiDiagonalSum;
 

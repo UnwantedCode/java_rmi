@@ -29,7 +29,7 @@ public class MatrixAdderImpl extends UnicastRemoteObject implements MatrixMultip
 
         try {
             Registry registry = LocateRegistry.getRegistry();
-            List<Future<double[]>> futures = new ArrayList<>();
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
 
             for (int i = 0; i < size; i++) {
                 final int row = i;
@@ -37,17 +37,22 @@ public class MatrixAdderImpl extends UnicastRemoteObject implements MatrixMultip
 
                 System.out.println("[" + LocalDateTime.now() + "] Serwer: Wysyłanie wiersza " + row + " do Agenta" + row);
 
-                Future<double[]> future = executor.submit(() -> {
-                    double[] rowResult = agent.addFragment(matrixA[row], matrixB[row]);
-                    System.out.println("[" + LocalDateTime.now() + "] Serwer: Odebrano wynik od Agenta" + row);
-                    return rowResult;
-                });
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    try {
+                        double[] rowResult = agent.addFragment(matrixA[row], matrixB[row]);
+                        synchronized (result) {
+                            result[row] = rowResult;
+                        }
+                        System.out.println("[" + LocalDateTime.now() + "] Serwer: Odebrano wynik od Agenta" + row);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }, executor);
+
                 futures.add(future);
             }
 
-            for (int i = 0; i < size; i++) {
-                result[i] = futures.get(i).get();
-            }
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

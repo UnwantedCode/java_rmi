@@ -1,6 +1,6 @@
 package client;
 
-import shared.OddEvenSorter;
+import shared.MaxFinder;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -12,14 +12,14 @@ public class Client {
         try {
             Registry registry = LocateRegistry.getRegistry();
 
-            OddEvenSorter server = (OddEvenSorter) registry.lookup("OddEvenSorter");
+            MaxFinder server = (MaxFinder) registry.lookup("MaxFinder");
 
-            int[] array = {5, 1, 4, 2, 3};
+            int[] array = {6, 3, 8, 2, 7, 5};
 
-            System.out.println("[" + LocalDateTime.now() + "] Klient: Wysyłanie tablicy do serwera: " + Arrays.toString(array));
-            int[] sortedArray = server.sortArray(array);
+            System.out.println("[" + LocalDateTime.now() + "] Klient: Wysyłanie tablicy do serwera...");
+            int max = server.findMax(array);
 
-            System.out.println("[" + LocalDateTime.now() + "] Klient: Otrzymana posortowana tablica: " + Arrays.toString(sortedArray));
+            System.out.println("[" + LocalDateTime.now() + "] Klient: Maksimum tablicy: " + max);
         } catch (Exception e) {
             System.err.println("Client exception: " + e.toString());
             e.printStackTrace();

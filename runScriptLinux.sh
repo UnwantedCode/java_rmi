@@ -14,7 +14,7 @@ if pgrep -x "rmiregistry" > /dev/null
 then
     echo "Zatrzymywanie starego procesu rmiregistry..."
     pkill rmiregistry
-    sleep 5
+    sleep 2
 fi
 
 if lsof -i:1099 > /dev/null
@@ -32,7 +32,7 @@ echo "rmiregistry zostało uruchomione."
 echo "Uruchamianie serwera..."
 gnome-terminal --active -- bash -c "java server.Server; exec bash"
 
-sleep 5
+sleep 2
 
 echo "Uruchamianie agenta 0..."
 gnome-terminal --active -- bash -c "java agent.AgentServer 0; exec bash"

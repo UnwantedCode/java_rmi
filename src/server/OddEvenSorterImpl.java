@@ -10,6 +10,9 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class OddEvenSorterImpl extends UnicastRemoteObject implements OddEvenSorter {
     public OddEvenSorterImpl() throws RemoteException {}
@@ -24,27 +27,31 @@ public class OddEvenSorterImpl extends UnicastRemoteObject implements OddEvenSor
             Agent agentOdd = (Agent) registry.lookup("Agent1");
 
             boolean isSorted = false;
+            ExecutorService executor = Executors.newFixedThreadPool(2);
             while (!isSorted) {
                 isSorted = true;
-
                 System.out.println("[" + LocalDateTime.now() + "] Serwer: Rozpoczyna fazę parzystą.");
-                int[] newArray = agentEven.sortPhase(array, true);
-                if (!Arrays.equals(array, newArray)) {
-                    isSorted = false;
-                }
-                array = newArray;
+                int[] evenPhaseArray = Arrays.copyOf(array, array.length);
+                Future<int[]> evenPhaseFuture = executor.submit(() -> agentEven.sortPhase(evenPhaseArray, true));
+                int[] evenSortedArray = evenPhaseFuture.get();
 
                 System.out.println("[" + LocalDateTime.now() + "] Serwer: Rozpoczyna fazę nieparzystą.");
-                newArray = agentOdd.sortPhase(array, false);
-                if (!Arrays.equals(array, newArray)) {
+                int[] oddPhaseArray = Arrays.copyOf(evenSortedArray, evenSortedArray.length);
+                Future<int[]> oddPhaseFuture = executor.submit(() -> agentOdd.sortPhase(oddPhaseArray, false));
+                int[] oddSortedArray = oddPhaseFuture.get();
+
+                if (!Arrays.equals(array, oddSortedArray)) {
                     isSorted = false;
                 }
-                array = newArray;
+                array = Arrays.copyOf(oddSortedArray, oddSortedArray.length);
+
+                System.out.println("[" + LocalDateTime.now() + "] Serwer: Aktualny stan tablicy: " + Arrays.toString(array));
             }
 
+            executor.shutdown();
             System.out.println("[" + LocalDateTime.now() + "] Serwer: Tablica posortowana: " + Arrays.toString(array));
             return array;
-        } catch (Exception e) {
+        }  catch (Exception e) {
             e.printStackTrace();
             throw new RemoteException("Błąd podczas sortowania tablicy.");
         }

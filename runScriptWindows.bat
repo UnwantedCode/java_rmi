@@ -39,7 +39,7 @@ REM Uruchamianie serwera
 echo Uruchamianie serwera...
 start cmd /k "cd /d "%COMPILED_DIR%" && java server.Server && pause"
 
-timeout /t 2 > nul
+timeout /t 4 > nul
 
 REM Uruchamianie agenta 0
 echo Uruchamianie agenta 0...

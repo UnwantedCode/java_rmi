@@ -28,26 +28,33 @@ public class MatrixMultiplierImpl extends UnicastRemoteObject implements MatrixM
         printMatrix(matrixB);
         try {
             Registry registry = LocateRegistry.getRegistry();
-            List<Future<double[]>> futures = new ArrayList<>();
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
+
             for (int i = 0; i < size; i++) {
                 final int row = i;
                 final int agentNumber = i + 1;
-                Agent agent = (Agent) registry.lookup("Agent" + (agentNumber));
+                Agent agent = (Agent) registry.lookup("Agent" + agentNumber);
 
                 System.out.println("[" + LocalDateTime.now() + "] Serwer: Wysyłanie wiersza " + row + " do Agenta" + agentNumber);
 
-                Future<double[]> future = executor.submit(() -> {
-                    double[] column = getColumn(matrixB, row);
-                    double[] rowResult = agent.multiplyFragment(matrixA, column);
-                    System.out.println("[" + LocalDateTime.now() + "] Serwer: Odebrano wynik od Agenta" + agentNumber);
-                    return rowResult;
-                });
-                futures.add(future);
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    try {
+                        double[] column = getColumn(matrixB, row);
+                        double[] rowResult = agent.multiplyFragment(matrixA, column);
+                        synchronized (result) {
+                            result[row] = rowResult;
+                        }
+                        System.out.println("[" + LocalDateTime.now() + "] Serwer: Odebrano wynik od Agenta" + agentNumber);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }, executor);
 
+                futures.add(future);
             }
-            for (int i = 0; i < size; i++) {
-                result[i] = futures.get(i).get();
-            }
+
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

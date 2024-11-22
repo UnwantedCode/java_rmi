@@ -40,9 +40,6 @@ gnome-terminal --active -- bash -c "java agent.AgentServer 0; exec bash"
 echo "Uruchamianie agenta 1..."
 gnome-terminal --active -- bash -c "java agent.AgentServer 1; exec bash"
 
-echo "Uruchamianie agenta 2..."
-gnome-terminal --active -- bash -c "java agent.AgentServer 2; exec bash"
-
 echo "Uruchamianie klienta..."
 gnome-terminal --active -- bash -c "java client.Client; exec bash"
 

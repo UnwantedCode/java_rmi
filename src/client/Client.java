@@ -1,6 +1,6 @@
 package client;
 
-import shared.MatrixMultiplier;
+import shared.MatrixDeterminant;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -10,33 +10,26 @@ public class Client {
     public static void main(String[] args) {
         try {
             Registry registry = LocateRegistry.getRegistry();
-            MatrixMultiplier server = (MatrixMultiplier) registry.lookup("MatrixAdder");
 
-            double[][] matrixA = {
-                    {1, 2, 3},
+            MatrixDeterminant server = (MatrixDeterminant) registry.lookup("MatrixDeterminant");
+
+            double[][] matrix = {
+                    {3, 2, 3},
                     {4, 5, 6},
                     {7, 8, 9}
             };
-
-            double[][] matrixB = {
-                    {12, 8, 7},
-                    {6, 5, 4},
-                    {3, 2, 1}
-            };
-
-            System.out.println("[" + LocalDateTime.now() + "] Klient: Wysyłanie zadań do serwera...");
-            double[][] result = server.multiply(matrixA, matrixB);
-            System.out.println("[" + LocalDateTime.now() + "] Klient: Wynik odebrany od serwera:");
-            System.out.println("Wynik dodawania macierzy:");
-            for (double[] row : result) {
+            for (double[] row : matrix) {
                 for (double val : row) {
                     System.out.printf("%.2f ", val);
                 }
                 System.out.println();
             }
+            System.out.println("[" + LocalDateTime.now() + "] Klient: Wysyłanie macierzy do serwera...");
+            double determinant = server.calculateDeterminant(matrix);
 
+            System.out.println("[" + LocalDateTime.now() + "] Klient: Wyznacznik odebrany od serwera: " + determinant);
         } catch (Exception e) {
-            System.err.println("Client exception: " + e);
+            System.err.println("Client exception: " + e.toString());
             e.printStackTrace();
         }
     }

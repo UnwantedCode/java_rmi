@@ -1,47 +1,56 @@
-#!/bin/bash
-SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
-SRC_DIR="$SCRIPT_DIR/src"
-COMPILED_DIR="$SCRIPT_DIR/compiled"
+@echo off
+setlocal
 
-mkdir -p "$COMPILED_DIR"
+REM Ustal katalog, w którym znajduje się skrypt
+set SCRIPT_DIR=%~dp0
+set SRC_DIR=%SCRIPT_DIR%src
+set COMPILED_DIR=%SCRIPT_DIR%compiled
 
-echo "Kompilacja plików źródłowych..."
-javac -d "$COMPILED_DIR" $(find "$SRC_DIR" -name "*.java")
+REM Upewnij się, że katalog na pliki skompilowane istnieje
+if not exist "%COMPILED_DIR%" mkdir "%COMPILED_DIR%"
 
-export CLASSPATH="$COMPILED_DIR"
+echo Kompilacja plików źródłowych...
+for /r "%SRC_DIR%" %%f in (*.java) do (
+    echo Kompilowanie: %%f
+    javac -d "%COMPILED_DIR%" -cp "%COMPILED_DIR%" "%%f"
+)
+if %ERRORLEVEL% NEQ 0 (
+    echo Kompilacja zakończona błędem.
+    pause
+    exit /b 1
+)
 
-if pgrep -x "rmiregistry" > /dev/null
-then
-    echo "Zatrzymywanie starego procesu rmiregistry..."
-    pkill rmiregistry
-    sleep 5
-fi
+REM Ustawienie CLASSPATH
+set CLASSPATH=%COMPILED_DIR%
 
-if lsof -i:1099 > /dev/null
-then
-    echo "Port 1099 jest zajęty. Zwalnianie portu..."
-    fuser -k 1099/tcp
-    sleep 2
-fi
+REM Zatrzymywanie starego procesu rmiregistry, jeśli działa
+for /f "tokens=5" %%P in ('netstat -ano ^| find "1099"') do (
+    echo Port 1099 jest zajęty przez PID %%P. Zwalnianie portu...
+    taskkill /PID %%P /F
+    timeout /t 2 > nul
+)
 
-echo "Uruchamianie nowego rmiregistry..."
-echo "Uruchamianie nowego rmiregistry..."
-cd "$COMPILED_DIR" || exit 1
-echo "rmiregistry zostało uruchomione."
+REM Uruchomienie rmiregistry
+echo Uruchamianie nowego rmiregistry...
+start cmd /k "cd /d "%COMPILED_DIR%" && rmiregistry -J--add-opens=java.rmi/sun.rmi.registry=ALL-UNNAMED && pause"
+echo rmiregistry zostało uruchomione.
 
-echo "Uruchamianie serwera..."
-gnome-terminal --active -- bash -c "java server.Server; exec bash"
+REM Uruchamianie serwera
+echo Uruchamianie serwera...
+start cmd /k "cd /d "%COMPILED_DIR%" && java server.Server && pause"
 
-sleep 5
+timeout /t 2 > nul
 
-echo "Uruchamianie agenta 0..."
-gnome-terminal --active -- bash -c "java agent.AgentServer 0; exec bash"
+REM Uruchamianie agenta 0
+echo Uruchamianie agenta 0...
+start cmd /k "cd /d "%COMPILED_DIR%" && java agent.AgentServer 0 && pause"
 
-echo "Uruchamianie agenta 1..."
-gnome-terminal --active -- bash -c "java agent.AgentServer 1; exec bash"
+REM Uruchamianie agenta 1
+echo Uruchamianie agenta 1...
+start cmd /k "cd /d "%COMPILED_DIR%" && java agent.AgentServer 1 && pause"
 
-echo "Uruchamianie klienta..."
-gnome-terminal --active -- bash -c "java client.Client; exec bash"
+REM Uruchamianie klienta
+echo Uruchamianie klienta...
+start cmd /k "cd /d "%COMPILED_DIR%" && java client.Client && pause"
 
-
-
+endlocal
